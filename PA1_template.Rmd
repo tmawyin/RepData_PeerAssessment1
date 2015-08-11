@@ -122,6 +122,51 @@ avg.daily[which.max(avg.daily$meanSteps),"interval"]
 
 ## Imputing missing values
 
+In this section, all missing values will be replaced with some quantity to check
+how the data changes accordingly. The first step is to count the total number
+of **NA** values in the data set.
 
+```{r totalNA, echo = TRUE}
+with(data, sum(is.na(steps) | is.na(date) | is.na(interval)))
+```
+
+Note that the count is done by accounting for missing values in each of the
+columns. An exploration of the data revealed that only the "steps" variable
+contains NAs.  
+
+The missing values will be changed using the values obtained in the previous
+section, that is, using the average values per interval. To do so, a dataframe
+containing all the averages per interval can be obtained and matched to any
+missing value, as long as the interval number matches.
+
+```{r replaceNAs, echo = TRUE, warning = FALSE}
+# A new data frame that contains interval and average steps only
+replace.na <- unique(avg.daily[,3:4])
+# Generating a new dataframe
+clean.data <- data
+clean.data$steps[is.na(clean.data$steps)] <- ifelse(clean.data$interval == replace.na$interval,
+                                                    replace.na$meanSteps, clean.data$steps)
+# Checking new data
+str(clean.data)
+```
+
+It is possible to generate a similar histogram as in the first section. This will
+provide an idea on how the results changed by replacing missing values.
+
+```{r histogram_clean, echo = TRUE}
+steps.daily.clean <-  clean.data  %>% 
+                group_by(date) %>% 
+                summarise(dailyStep = sum(steps, na.rm=TRUE))
+
+ggplot(data = steps.daily.clean, aes(dailyStep)) + 
+    geom_histogram(breaks = seq(0, 21200, by=1000), color = "black", fill="blue",alpha = .75) +
+    labs(title = "Histogram of daily steps - No missing data") +
+    labs(x = "Number of daily steps", y= "Frequency") +
+    theme_classic(base_family = "Arial")
+```
+
+It can be noted that the histogram shape does not change very much, in fact the
+only difference in this case is an increase in the frequency of the more popular
+number of daily steps.
 
 ## Are there differences in activity patterns between weekdays and weekends?

@@ -178,6 +178,67 @@ avg.daily[which.max(avg.daily$meanSteps),"interval"]
 
 ## Imputing missing values
 
+In this section, all missing values will be replaced with some quantity to check
+how the data changes accordingly. The first step is to count the total number
+of **NA** values in the data set.
 
+
+```r
+with(data, sum(is.na(steps) | is.na(date) | is.na(interval)))
+```
+
+```
+## [1] 2304
+```
+
+Note that the count is done by accounting for missing values in each of the
+columns. An exploration of the data revealed that only the "steps" variable
+contains NAs.  
+
+The missing values will be changed using the values obtained in the previous
+section, that is, using the average values per interval. To do so, a dataframe
+containing all the averages per interval can be obtained and matched to any
+missing value, as long as the interval number matches.
+
+
+```r
+# A new data frame that contains interval and average steps only
+replace.na <- unique(avg.daily[,3:4])
+# Generating a new dataframe
+clean.data <- data
+clean.data$steps[is.na(clean.data$steps)] <- ifelse(clean.data$interval == replace.na$interval,
+                                                    replace.na$meanSteps, clean.data$steps)
+# Checking new data
+str(clean.data)
+```
+
+```
+## Classes 'tbl_df', 'tbl' and 'data.frame':	17568 obs. of  3 variables:
+##  $ steps   : num  1.717 0.3396 0.1321 0.1509 0.0755 ...
+##  $ date    : Date, format: "2012-10-01" "2012-10-01" ...
+##  $ interval: int  0 5 10 15 20 25 30 35 40 45 ...
+```
+
+It is possible to generate a similar histogram as in the first section. This will
+provide an idea on how the results changed by replacing missing values.
+
+
+```r
+steps.daily.clean <-  clean.data  %>% 
+                group_by(date) %>% 
+                summarise(dailyStep = sum(steps, na.rm=TRUE))
+
+ggplot(data = steps.daily.clean, aes(dailyStep)) + 
+    geom_histogram(breaks = seq(0, 21200, by=1000), color = "black", fill="blue",alpha = .75) +
+    labs(title = "Histogram of daily steps - No missing data") +
+    labs(x = "Number of daily steps", y= "Frequency") +
+    theme_classic(base_family = "Arial")
+```
+
+![plot of chunk histogram_clean](figure/histogram_clean-1.png) 
+
+It can be noted that the histogram shape does not change very much, in fact the
+only difference in this case is an increase in the frequency of the more popular
+number of daily steps.
 
 ## Are there differences in activity patterns between weekdays and weekends?
