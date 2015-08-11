@@ -196,7 +196,7 @@ columns. An exploration of the data revealed that only the "steps" variable
 contains NAs.  
 
 The missing values will be changed using the values obtained in the previous
-section, that is, using the average values per interval. To do so, a dataframe
+section, that is, using the average values per interval. To do so, a data frame
 containing all the averages per interval can be obtained and matched to any
 missing value, as long as the interval number matches.
 
@@ -239,6 +239,97 @@ ggplot(data = steps.daily.clean, aes(dailyStep)) +
 
 It can be noted that the histogram shape does not change very much, in fact the
 only difference in this case is an increase in the frequency of the more popular
-number of daily steps.
+number of daily steps. This is expected due to more data points in the set.  
+
+Similar to the first part, the mean and the median can be easily calculated as 
+follows:
+
+
+```r
+mean(steps.daily.clean$dailyStep)
+```
+
+```
+## [1] 10766.19
+```
+
+```r
+median(steps.daily.clean$dailyStep)
+```
+
+```
+## [1] 10766.19
+```
+
+The value of the average did not change as we are adding more average values. The 
+median on the other hand, changed slightly due to the increase of values in the 
+data.
 
 ## Are there differences in activity patterns between weekdays and weekends?
+
+The purpose of this section is to check the difference in activity during the 
+weekday and the weekend. To do so, the data must be divided into the appropriate 
+type. This can be accomplished as follows:
+
+
+```r
+# Modifying the clean.data table to include two factors.
+clean.data <- clean.data %>% mutate(weekType = as.factor(ifelse(weekdays(date) %in% 
+                                    c("Saturday","Sunday"), "Weekend", "Weekday")))
+```
+
+The code above, generates a new column that with values *Weekend* or *Weekday* 
+depending on the date variable. With that in mind, it is possible to generate 
+a time series data.
+
+
+```r
+avg.daily.clean <- clean.data  %>% 
+    # Grouping by interval and weektype
+    group_by(interval, weekType) %>% 
+    mutate(meanSteps = mean(steps, na.rm = TRUE)) 
+
+# Checking the data
+avg.daily.clean
+```
+
+```
+## Source: local data frame [17,568 x 5]
+## Groups: interval, weekType
+## 
+##        steps       date interval weekType  meanSteps
+## 1  1.7169811 2012-10-01        0  Weekday 2.25115304
+## 2  0.3396226 2012-10-01        5  Weekday 0.44528302
+## 3  0.1320755 2012-10-01       10  Weekday 0.17316562
+## 4  0.1509434 2012-10-01       15  Weekday 0.19790356
+## 5  0.0754717 2012-10-01       20  Weekday 0.09895178
+## 6  2.0943396 2012-10-01       25  Weekday 1.59035639
+## 7  0.5283019 2012-10-01       30  Weekday 0.69266247
+## 8  0.8679245 2012-10-01       35  Weekday 1.13794549
+## 9  0.0000000 2012-10-01       40  Weekday 0.00000000
+## 10 1.4716981 2012-10-01       45  Weekday 1.79622642
+## ..       ...        ...      ...      ...        ...
+```
+
+With the new data, it is possible to generate the time series plot. This time, 
+the plot will be separated into panels. One panel will be for the weekdays and 
+the second panel will be for the weekends. This will help identify the major 
+differences between the two.
+
+
+```r
+ggplot(data = avg.daily.clean, aes(interval, meanSteps)) + 
+    geom_line(color = "blue") +
+    # Adding the panels
+    facet_grid(weekType ~ .) +
+    labs(title = "Average steps by interval") +
+    labs(x = "Intervals", y = "Average Steps") +
+    # Applying a gray theme for best contrast
+    theme_gray(base_family = "Arial")
+```
+
+![plot of chunk timeseries_clean](figure/timeseries_clean-1.png) 
+
+As a general observation it can be noted that during the weekends, there are 
+more peaks with higher averages. This implies that this person is more active 
+during the weekends than during the weekdays.
