@@ -206,8 +206,9 @@ missing value, as long as the interval number matches.
 replace.na <- unique(avg.daily[,3:4])
 # Generating a new dataframe
 clean.data <- data
-clean.data$steps[is.na(clean.data$steps)] <- ifelse(clean.data$interval == replace.na$interval,
-                                                    replace.na$meanSteps, clean.data$steps)
+clean.data$steps <- ifelse(is.na(clean.data$steps), 
+                    replace.na$meanSteps[match(clean.data$interval,replace.na$interval)],
+                    clean.data$steps)
 # Checking new data
 str(clean.data)
 ```

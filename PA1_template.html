@@ -376,8 +376,9 @@ missing value, as long as the interval number matches.</p>
 replace.na &lt;- unique(avg.daily[,3:4])
 # Generating a new dataframe
 clean.data &lt;- data
-clean.data$steps[is.na(clean.data$steps)] &lt;- ifelse(clean.data$interval == replace.na$interval,
-                                                    replace.na$meanSteps, clean.data$steps)
+clean.data$steps &lt;- ifelse(is.na(clean.data$steps), 
+                    replace.na$meanSteps[match(clean.data$interval,replace.na$interval)],
+                    clean.data$steps)
 # Checking new data
 str(clean.data)
 </code></pre>
